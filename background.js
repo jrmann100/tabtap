@@ -7,6 +7,35 @@
 // choose whether new tabs go into a new group or the most recent? the furthest right?
 // shift current tab between groups
 // optional onboarding which launches sample groups and has checklist of trying out commands
+// typescript and @types/chrome
+
+const getLastTabId = async (groupId) =>
+  (await chrome.storage.local.get(groupId.toString()))[groupId];
+
+const restoreLastTab = async ({ id: groupId }) => {
+  const lastTabId =
+    (await getLastTabId(groupId)) ??
+    (
+      await chrome.tabs.query({
+        groupId,
+      })
+    ).at(-1).id;
+  return chrome.tabs.update(lastTabId, { active: true });
+};
+
+const setLastTabId = (groupId, tabId) =>
+  chrome.storage.local.set({ [groupId]: tabId });
+
+const saveLastTab = async ({ id: groupId }) =>
+  setLastTabId(
+    groupId,
+    (
+      await chrome.tabs.query({
+        active: true,
+        groupId,
+      })
+    )[0].id
+  );
 
 const getContext = async () => {
   const window = await chrome.windows.getCurrent();
@@ -74,7 +103,6 @@ chrome.omnibox.onInputEntered.addListener(async (text) => {
   const updateOptions = {};
 
   if (colorMatch) {
-    console.log(colorMatch);
     const color = colorMatch.at(-1).toLowerCase();
     if (!COLORS.includes(color)) {
       return;
@@ -109,22 +137,22 @@ chrome.commands.onCommand.addListener(async (command) => {
     return;
   }
 
-  groups.forEach((g, i) => {
-    let collapsed = false;
+  saveLastTab(currentGroup);
 
-    if (command === "up") {
-      collapsed = false;
-    } else if (command === "down") {
-      collapsed = true;
-    } else if (command === "right") {
-      collapsed = i !== (currentGroupIndex + 1) % groups.length;
-    } else if (command === "left") {
-      collapsed = i !== (currentGroupIndex - 1 + groups.length) % groups.length;
-    } else {
-      throw new Error(`Unknown command: ${command}`);
-    }
-    chrome.tabGroups.update(g.id, {
-      collapsed,
+  let newGroup = null;
+  if (command === "right") {
+    newGroup = groups[(currentGroupIndex + 1) % groups.length];
+  } else if (command === "left") {
+    newGroup = groups[(currentGroupIndex - 1 + groups.length) % groups.length];
+  }
+
+  groups.forEach((group) => {
+    chrome.tabGroups.update(group.id, {
+      collapsed: !(command === "up" || group === newGroup),
     });
   });
+
+  if (newGroup !== null) {
+    restoreLastTab(newGroup);
+  }
 });

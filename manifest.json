@@ -3,7 +3,7 @@
   "version": "1.0",
   "manifest_version": 3,
   "description": "Manage tab groups using your keyboard.",
-  "permissions": ["tabs", "tabGroups"],
+  "permissions": ["tabs", "tabGroups", "storage"],
   "omnibox": { "keyword": "tt" },
   "background": {
     "service_worker": "background.js"
