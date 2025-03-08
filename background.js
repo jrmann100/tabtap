@@ -8,6 +8,7 @@
 // shift current tab between groups
 // optional onboarding which launches sample groups and has checklist of trying out commands
 // typescript and @types/chrome
+// omnibox could have .NAME to jump to group by name
 
 const getLastTabId = async (groupId) =>
   (await chrome.storage.local.get(groupId.toString()))?.[groupId];
