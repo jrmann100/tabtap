@@ -10,9 +10,9 @@
 // typescript and @types/chrome
 
 const getLastTabId = async (groupId) =>
-  (await chrome.storage.local.get(groupId.toString()))[groupId];
+  (await chrome.storage.local.get(groupId.toString()))?.[groupId];
 
-const restoreLastTab = async ({ id: groupId }) => {
+const restoreLastTab = async (groupId) => {
   const lastTabId =
     (await getLastTabId(groupId)) ??
     (
@@ -26,12 +26,11 @@ const restoreLastTab = async ({ id: groupId }) => {
 const setLastTabId = (groupId, tabId) =>
   chrome.storage.local.set({ [groupId]: tabId });
 
-const saveLastTab = async ({ id: windowId }) => {
-  const [tab] = await chrome.tabs.query({ active: true, windowId });
-  if (tab.groupId === -1) {
+const saveLastTab = async (currentTab) => {
+  if (currentTab.groupId === -1) {
     return;
   }
-  setLastTabId(tab.groupId, tab.id);
+  setLastTabId(currentTab.groupId, currentTab.id);
 };
 
 const getContext = async () => {
@@ -47,9 +46,14 @@ const getContext = async () => {
   )
     .toSorted(([indexA], [indexB]) => indexA - indexB)
     .map(([, group]) => group);
-  const currentGroupIndex = groups.findLastIndex((g) => !g.collapsed);
+  const currentTab = (
+    await chrome.tabs.query({ active: true, windowId: window.id })
+  )[0];
+  const currentGroupIndex = groups.findIndex(
+    (group) => group.id === currentTab.groupId
+  );
   const currentGroup = groups[currentGroupIndex];
-  return { window, groups, currentGroupIndex, currentGroup };
+  return { window, groups, currentGroupIndex, currentGroup, currentTab };
 };
 
 const COLORS = [
@@ -117,11 +121,15 @@ chrome.omnibox.onInputEntered.addListener(async (text) => {
 });
 
 chrome.commands.onCommand.addListener(async (command) => {
-  const { window, groups, currentGroupIndex, currentGroup } =
+  const { window, groups, currentGroupIndex, currentGroup, currentTab } =
     await getContext();
 
+  saveLastTab(currentTab);
+
+  let newGroupId = null;
+
   if (command === "new" || command === "create") {
-    chrome.tabs.group({
+    newGroupId = await chrome.tabs.group({
       tabIds: (
         await chrome.tabs.create({
           windowId: window.id,
@@ -131,25 +139,23 @@ chrome.commands.onCommand.addListener(async (command) => {
         ? {}
         : { groupId: currentGroup.id }),
     });
-    return;
-  }
-
-  saveLastTab(window);
-
-  let newGroup = null;
-  if (command === "right") {
-    newGroup = groups[(currentGroupIndex + 1) % groups.length];
+    console.log(newGroupId);
+  } else if (command === "right") {
+    newGroupId = groups[(currentGroupIndex + 1) % groups.length].id;
   } else if (command === "left") {
-    newGroup = groups[(currentGroupIndex - 1 + groups.length) % groups.length];
+    newGroupId =
+      groups[(currentGroupIndex - 1 + groups.length) % groups.length].id;
+  } else if (command === "down") {
+    newGroupId = currentGroup?.id ?? null;
   }
 
   groups.forEach((group) => {
     chrome.tabGroups.update(group.id, {
-      collapsed: !(command === "up" || group === newGroup),
+      collapsed: !(command === "up" || group.id === newGroupId),
     });
   });
 
-  if (newGroup !== null) {
-    restoreLastTab(newGroup);
+  if (command === "right" || command === "left") {
+    restoreLastTab(newGroupId);
   }
 });

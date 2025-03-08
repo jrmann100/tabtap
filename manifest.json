@@ -22,7 +22,7 @@
       "global": false
     },
     "down": {
-      "description": "Collapse all tab groups",
+      "description": "Collapse all inactive tab groups",
       "global": false
     },
     "new": {
