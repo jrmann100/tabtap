@@ -1,0 +1,37 @@
+{
+  "name": "TabTap",
+  "version": "1.0",
+  "manifest_version": 3,
+  "description": "Manage tabs using keyboard shortcuts.",
+  "permissions": ["tabs", "tabGroups"],
+  "omnibox": { "keyword": "tt" },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "right": {
+      "description": "Go to the next tab group",
+      "global": false
+    },
+    "left": {
+      "description": "Go to the previous tab group",
+      "global": false
+    },
+    "up": {
+      "description": "Expand all tab groups",
+      "global": false
+    },
+    "down": {
+      "description": "Collapse all tab groups",
+      "global": false
+    },
+    "new": {
+      "description": "Open a new tab in the current tab group",
+      "global": false
+    },
+    "create": {
+      "description": "Create a new tab group",
+      "global": false
+    }
+  }
+}
