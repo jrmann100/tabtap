@@ -2,7 +2,7 @@
   "name": "TabTap",
   "version": "1.0",
   "manifest_version": 3,
-  "description": "Manage tabs using keyboard shortcuts.",
+  "description": "Manage tab groups using your keyboard.",
   "permissions": ["tabs", "tabGroups"],
   "omnibox": { "keyword": "tt" },
   "background": {
