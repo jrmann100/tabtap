@@ -6,6 +6,7 @@
 // -> and the collapse command doesn't trigger this behavior.
 // choose whether new tabs go into a new group or the most recent? the furthest right?
 // shift current tab between groups
+// optional onboarding which launches sample groups and has checklist of trying out commands
 
 const getContext = async () => {
   const window = await new Promise((resolve) => {
