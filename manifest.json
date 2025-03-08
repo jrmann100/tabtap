@@ -32,6 +32,14 @@
     "create": {
       "description": "Create a new tab group",
       "global": false
+    },
+    "moveright": {
+      "description": "Move the current tab to the next tab group",
+      "global": false
+    },
+    "moveleft": {
+      "description": "Move the current tab to the previous tab group",
+      "global": false
     }
   }
 }

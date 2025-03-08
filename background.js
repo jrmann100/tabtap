@@ -102,6 +102,37 @@ chrome.commands.onCommand.addListener(async (command) => {
     return;
   }
 
+  const nextTabGroupIndex = (currentGroupIndex + 1) % groups.length;
+  const lastTabGroupIndex =
+    (currentGroupIndex - 1 + groups.length) % groups.length;
+
+  if (command === "moveright" || command === "moveleft") {
+    const currentTab = await new Promise((resolve) => {
+      chrome.tabs.query(
+        {
+          active: true,
+          currentWindow: true,
+        },
+        (tabs) => resolve(tabs[0])
+      );
+    });
+
+    console.log(
+      "moving tab",
+      currentTab.id,
+      "to group",
+      groups[command === "moveright" ? nextTabGroupIndex : lastTabGroupIndex]
+        .title
+    );
+
+    chrome.tabs.group({
+      tabIds: currentTab.id,
+      groupId:
+        groups[command === "moveright" ? nextTabGroupIndex : lastTabGroupIndex]
+          .id,
+    });
+  }
+
   groups.forEach((g, i) => {
     let collapsed = false;
 
@@ -109,12 +140,10 @@ chrome.commands.onCommand.addListener(async (command) => {
       collapsed = false;
     } else if (command === "down") {
       collapsed = true;
-    } else if (command === "right") {
-      console.log((currentGroupIndex + 1) % groups.length);
-      collapsed = i !== (currentGroupIndex + 1) % groups.length;
-    } else if (command === "left") {
-      console.log((currentGroupIndex - 1 + groups.length) % groups.length);
-      collapsed = i !== (currentGroupIndex - 1 + groups.length) % groups.length;
+    } else if (command === "right" || command === "moveright") {
+      collapsed = i !== nextTabGroupIndex;
+    } else if (command === "left" || command === "moveleft") {
+      collapsed = i !== lastTabGroupIndex;
     } else {
       throw new Error(`Unknown command: ${command}`);
     }
