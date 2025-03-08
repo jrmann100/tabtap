@@ -1,6 +1,9 @@
 // Parking lot:
 // potentially can add a sidebar if we really want but I don't think it's necessary
 // ai organize tabs with BYO openai key
+// when you collapse all tab groups, chrome opens a new tab in no group - can we prevent this?
+// choose whether new tabs go into a new group or the most recent? the furthest right?
+// shift current tab between groups
 
 const getContext = async () => {
   const window = await new Promise((resolve) => {
