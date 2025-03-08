@@ -9,12 +9,18 @@
 // optional onboarding which launches sample groups and has checklist of trying out commands
 
 const getContext = async () => {
-  const window = await new Promise((resolve) => {
-    chrome.windows.getCurrent({}, resolve);
-  });
-  const groups = await new Promise((resolve) => {
-    chrome.tabGroups.query({ windowId: window.id }, resolve);
-  });
+  const window = await chrome.windows.getCurrent();
+  const unsortedGroups = await chrome.tabGroups.query({ windowId: window.id });
+  const groups = (
+    await Promise.all(
+      unsortedGroups.map(async (group) => [
+        (await chrome.tabs.query({ groupId: group.id }))[0].index,
+        group,
+      ])
+    )
+  )
+    .toSorted(([indexA], [indexB]) => indexA - indexB)
+    .map(([, group]) => group);
   const currentGroupIndex = groups.findLastIndex((g) => !g.collapsed);
   const currentGroup = groups[currentGroupIndex];
   return { window, groups, currentGroupIndex, currentGroup };
@@ -111,10 +117,8 @@ chrome.commands.onCommand.addListener(async (command) => {
     } else if (command === "down") {
       collapsed = true;
     } else if (command === "right") {
-      console.log((currentGroupIndex + 1) % groups.length);
       collapsed = i !== (currentGroupIndex + 1) % groups.length;
     } else if (command === "left") {
-      console.log((currentGroupIndex - 1 + groups.length) % groups.length);
       collapsed = i !== (currentGroupIndex - 1 + groups.length) % groups.length;
     } else {
       throw new Error(`Unknown command: ${command}`);
