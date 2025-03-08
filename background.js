@@ -2,6 +2,8 @@
 // potentially can add a sidebar if we really want but I don't think it's necessary
 // ai organize tabs with BYO openai key
 // when you collapse all tab groups, chrome opens a new tab in no group - can we prevent this?
+// -> actually this isn't such a problem since the expectation is you always use the keyboard,
+// -> and the collapse command doesn't trigger this behavior.
 // choose whether new tabs go into a new group or the most recent? the furthest right?
 // shift current tab between groups
 
