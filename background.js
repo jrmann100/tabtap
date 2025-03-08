@@ -26,16 +26,13 @@ const restoreLastTab = async ({ id: groupId }) => {
 const setLastTabId = (groupId, tabId) =>
   chrome.storage.local.set({ [groupId]: tabId });
 
-const saveLastTab = async ({ id: groupId }) =>
-  setLastTabId(
-    groupId,
-    (
-      await chrome.tabs.query({
-        active: true,
-        groupId,
-      })
-    )[0].id
-  );
+const saveLastTab = async ({ id: windowId }) => {
+  const [tab] = await chrome.tabs.query({ active: true, windowId });
+  if (tab.groupId === -1) {
+    return;
+  }
+  setLastTabId(tab.groupId, tab.id);
+};
 
 const getContext = async () => {
   const window = await chrome.windows.getCurrent();
@@ -137,7 +134,7 @@ chrome.commands.onCommand.addListener(async (command) => {
     return;
   }
 
-  saveLastTab(currentGroup);
+  saveLastTab(window);
 
   let newGroup = null;
   if (command === "right") {
