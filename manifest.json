@@ -25,10 +25,6 @@
       "description": "Collapse all inactive tab groups",
       "global": false
     },
-    "new": {
-      "description": "Open a new tab in the current tab group",
-      "global": false
-    },
     "create": {
       "description": "Create a new tab group",
       "global": false

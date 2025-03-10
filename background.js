@@ -121,6 +121,22 @@ chrome.omnibox.onInputEntered.addListener(async (text) => {
   chrome.tabGroups.update(currentGroup.id, updateOptions);
 });
 
+chrome.tabs.onCreated.addListener(async (tab) => {
+  if (tab.groupId !== -1) {
+    return;
+  }
+
+  const openGroups = await chrome.tabGroups.query({
+    collapsed: false,
+    windowId: tab.windowId,
+  });
+
+  chrome.tabs.group({
+    tabIds: tab.id,
+    ...(openGroups.length === 0 ? {} : { groupId: openGroups.at(-1).id }),
+  });
+});
+
 chrome.commands.onCommand.addListener(async (command) => {
   const { window, groups, currentGroupIndex, currentGroup, currentTab } =
     await getContext();
@@ -129,18 +145,15 @@ chrome.commands.onCommand.addListener(async (command) => {
 
   let newGroupId = null;
 
-  if (command === "new" || command === "create") {
+  if (command === "create") {
     newGroupId = await chrome.tabs.group({
       tabIds: (
         await chrome.tabs.create({
           windowId: window.id,
         })
       ).id,
-      ...(command === "create" || currentGroupIndex === -1
-        ? {}
-        : { groupId: currentGroup.id }),
+      ...(currentGroupIndex === -1 ? {} : { groupId: currentGroup.id }),
     });
-    console.log(newGroupId);
   } else if (command === "right") {
     newGroupId = groups[(currentGroupIndex + 1) % groups.length].id;
   } else if (command === "left") {
